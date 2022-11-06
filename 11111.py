@@ -33,7 +33,7 @@ line_bot_api = LineBotApi('n1ixZcsYtHe4NbGIqATUOYBJoNyuGY++xSBxPU6TzAd12xK4JTrOH
 handler = WebhookHandler('7cf77a8be12339f8169eb7cf466f2df0')
 
 heroku_url='https://benwang2000.herokuapp.com/'
-ngrok_url='https://ad29-49-158-68-104.jp.ngrok.io'
+ngrok_url='https://3d85-49-158-68-104.jp.ngrok.io'
 header_from={'Content-Type':'multipart/form-data'}
 header_json={'Content-Type':'application/json'}
 
@@ -55,8 +55,8 @@ def gen_frames():
 def open_door():
     sg90_freq=50
     GPIO.setmode(GPIO.BCM)   #gpio模式
-    GPIO.setup(17,GPIO.OUT)  #輸出腳位
-    SG90=GPIO.PWM(17,sg90_freq)     # 建立實體物件 腳位,頻率
+    GPIO.setup(12,GPIO.OUT)  #輸出腳位
+    SG90=GPIO.PWM(12,sg90_freq)     # 建立實體物件 腳位,頻率
     SG90.start(0)           #開始
     def duty_cycle_angle(angle=0):
         duty_cycle=(0.05*sg90_freq)+(0.19*sg90_freq*angle/180)
