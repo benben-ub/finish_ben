@@ -2,6 +2,7 @@
 
 
 
+from inspect import iscoroutinefunction
 import os
 from tkinter import Image
 from flask import Flask, request, abort,render_template,url_for,redirect,session,Response
@@ -32,7 +33,7 @@ line_bot_api = LineBotApi('n1ixZcsYtHe4NbGIqATUOYBJoNyuGY++xSBxPU6TzAd12xK4JTrOH
 handler = WebhookHandler('7cf77a8be12339f8169eb7cf466f2df0')
 
 heroku_url='https://benwang2000.herokuapp.com/'
-ngrok_url='https://8b54-2404-0-8234-4730-8a07-5efd-f3c7-88a7.jp.ngrok.io'
+ngrok_url='https://ad29-49-158-68-104.jp.ngrok.io'
 header_from={'Content-Type':'multipart/form-data'}
 header_json={'Content-Type':'application/json'}
 
@@ -65,11 +66,11 @@ def open_door():
         print(degree,"度＝",worksa,"週期")
         SG90.ChangeDutyCycle(worksa)
     # duty_cycle_angle(0)
-    list=[0,90]
+    list=[50,180,50]
     for i in range(3):
         for degree in list:
             move(degree)
-            time.sleep(0.5)
+            time.sleep(0.35)
     SG90.stop()
 
 
@@ -141,10 +142,13 @@ def det_programe():   #偵測qrcode程式
             disp.show()
             time.sleep(10)
             disp.fill(0)
-            
     cap.release()
     cv2.destroyAllWindows() 
     
+    
+
+    
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -153,6 +157,14 @@ def index():
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
      
+@app.route('/close')
+def close():
+    i2c = busio.I2C(SCL, SDA)
+    disp = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
+    disp.fill(0)
+    disp.show()
+    return "Oled close"
+
     
 # 接收 LINE 的資訊
 @app.route("/callback", methods=['POST'])
@@ -189,16 +201,16 @@ def pi():
     print('backfeed',pushqrcode,getqrcode)
     user_id = 'Uc6ca3a2dbabeb7576ec4bfe80fbaa9aa'
     if getqrcode==pushqrcode:
-        line_bot_api.push_message(user_id,TextSendMessage(text='驗證密碼正確,門開了'))
-        return f"門開了,驗證密碼是",getqrcode
+        line_bot_api.push_message(user_id,TextSendMessage(text="密碼驗證成功,門已經開啟"))
+        return "密碼驗證成功,門已經開啟"
     elif getqrcode==None:
-        line_bot_api.push_message(user_id,TextSendMessage(text="沒有驗證密碼,且超過五分鐘請在申請一次,驗證密碼為{getqrcode}"))
-        return f"沒有驗證密碼,且超過五分鐘請在申請一次,驗證密碼為",getqrcode
+        line_bot_api.push_message(user_id,TextSendMessage(text="沒有監測到密碼,超過時間請再申請一次"))
+        return "沒有監測到密碼,超過時間請再申請一次"
     elif getqrcode!=pushqrcode:
-        line_bot_api.push_message(user_id,TextSendMessage(text="您密碼錯誤請在申請一次,驗證密碼是{getqrcode}"))
-        return f"<>您密碼錯誤請在申請一次,驗證密碼是",getqrcode
+        line_bot_api.push_message(user_id,TextSendMessage(text="您密碼錯誤,請再申請一次"))
+        return "您密碼錯誤,請再申請一次"
     else:
-        return 'nook'
+        return 'something wrong!!'
     
 
 #學你說話
