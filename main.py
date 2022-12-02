@@ -33,7 +33,7 @@ line_bot_api = LineBotApi('n1ixZcsYtHe4NbGIqATUOYBJoNyuGY++xSBxPU6TzAd12xK4JTrOH
 handler = WebhookHandler('7cf77a8be12339f8169eb7cf466f2df0')
 
 heroku_url='https://benwang2000.herokuapp.com/'
-ngrok_url='https://3d85-49-158-68-104.jp.ngrok.io'
+ngrok_url='https://0c99-49-158-68-104.jp.ngrok.io'
 header_from={'Content-Type':'multipart/form-data'}
 header_json={'Content-Type':'application/json'}
 
@@ -86,12 +86,12 @@ def det_programe():   #偵測qrcode程式
     timeend=0
     pushqrcode=session["pushqrcode"]
     print('傳送到偵測程式中的pushqrcode',pushqrcode)
-    while int(timeend)-int(star)<100:
+    while int(timeend)-int(star)<180:
         ret,frame=cap.read()
         data, bbox, rectified = qrcode.detectAndDecode(frame)  # 偵測圖片中的 QRCode 
         print("ret--",ret,"data--",data,int(timeend)-int(star),"秒")
         timeend=time.time()
-        sec=str(100-(int(timeend)-int(star)))
+        sec=str(180-(int(timeend)-int(star)))
         print('剩餘時間',sec)
         
         disp.fill(0)
@@ -106,11 +106,11 @@ def det_programe():   #偵測qrcode程式
         x = 0
         font = ImageFont.truetype('TaipeiSansTCBeta-Bold.ttf', 12)
         draw.rectangle((0, 0, width, height), outline=0, fill=0)    
-        
+        session["getqrcode"]=data #----------------------
 
-        if data ==pushqrcode:
+        if data == pushqrcode:
             print(data,"==",pushqrcode)
-            session["getqrcode"]=data #----------------------
+            # session["getqrcode"]=data #----------------------
             draw.text((x+5, top + 5), "開門剩餘 "+sec+" 秒", font=font, fill=255)
             draw.text((x+5, top + 20), "密碼正確,許可開門" , font=font, fill=255)
             disp.image(image)
@@ -118,7 +118,7 @@ def det_programe():   #偵測qrcode程式
             time.sleep(1)
             open_door()
             break
-        elif data=="" and int(sec)>0:
+        elif data == '' and int(sec)>0:
             print("沒有收到",data)
             draw.text((x+5, top + 5),"開門剩餘 "+sec+" 秒", font=font, fill=255)
             draw.text((x+20, top + 20), "等待驗證......" , font=font, fill=255)
@@ -128,7 +128,7 @@ def det_programe():   #偵測qrcode程式
             continue
 
             
-        elif data!=pushqrcode:
+        elif data != pushqrcode:
             print("密碼不相符",data)
             draw.text((x, top + 2), "開門剩餘 " +sec+" 秒", font=font, fill=255)
             draw.text((x+5, top + 17), "密碼失效,重新申請" , font=font, fill=255)
@@ -181,7 +181,7 @@ def callback():
 # 產生qrcode
 @app.route('/qrc')
 def qrc():
-    ran_str = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+    ran_str = ''.join(random.sample(string.ascii_letters + string.digits, 32))
     print("產生qrcode隨機碼",ran_str)
     img=qrcode.make(ran_str)
     img.save('./static/la.png')
@@ -190,23 +190,23 @@ def qrc():
     user_id ='Uc6ca3a2dbabeb7576ec4bfe80fbaa9aa'
     url=ngrok_url+'/static/la.png'
     line_bot_api.push_message(user_id,ImageSendMessage(original_content_url=url, preview_image_url=url))
-    line_bot_api.push_message(user_id,TextSendMessage(text="你有5分鐘時間開門"))
+    line_bot_api.push_message(user_id,TextSendMessage(text="你有3分鐘時間開門"))
     return redirect('/pi')
 
 @app.route('/pi')
 def pi():
     det_programe()  #呼叫qrcode偵測程式
-    getqrcode=session["getqrcode"]
-    pushqrcode=session["pushqrcode"]
-    print('backfeed',pushqrcode,getqrcode)
+    getqrcode1=session["getqrcode"]
+    pushqrcode1=session["pushqrcode"]
+    print('backfeed',pushqrcode1,getqrcode1)
     user_id = 'Uc6ca3a2dbabeb7576ec4bfe80fbaa9aa'
-    if getqrcode==pushqrcode:
+    if getqrcode1 == pushqrcode1:
         line_bot_api.push_message(user_id,TextSendMessage(text="密碼驗證成功,門已經開啟"))
         return "密碼驗證成功,門已經開啟"
-    elif getqrcode==None:
+    elif getqrcode1 == '':
         line_bot_api.push_message(user_id,TextSendMessage(text="沒有監測到密碼,超過時間請再申請一次"))
         return "沒有監測到密碼,超過時間請再申請一次"
-    elif getqrcode!=pushqrcode:
+    elif getqrcode1 != pushqrcode1:
         line_bot_api.push_message(user_id,TextSendMessage(text="您密碼錯誤,請再申請一次"))
         return "您密碼錯誤,請再申請一次"
     else:
